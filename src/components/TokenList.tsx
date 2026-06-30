@@ -1,3 +1,5 @@
+import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Token } from "../types";
 import { TokenRow } from "./TokenRow";
 
@@ -15,16 +17,51 @@ interface TokenListProps {
  * is not. This is the part of the app the challenge is about.
  */
 export function TokenList({ tokens, selectedId, onSelect }: TokenListProps) {
-  return (
-    <div className="feed__list">
-      {tokens.map((token) => (
-        <TokenRow
-          key={token.id}
-          token={token}
-          selected={token.id === selectedId}
-          onSelect={onSelect}
-        />
-      ))}
+  const parentRef = useRef<HTMLDivElement>(null);
+
+const rowVirtualizer = useVirtualizer({
+  count: tokens.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 52,
+  overscan: 8,
+});
+  
+return (
+  <div
+    ref={parentRef}
+    className="feed__list"
+  >
+    <div
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+        width: "100%",
+        position: "relative",
+      }}
+    >
+      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        const token = tokens[virtualRow.index];
+
+        return (
+          <div
+            key={token.id}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: `${virtualRow.size}px`,
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
+          >
+            <TokenRow
+              token={token}
+              selected={token.id === selectedId}
+              onSelect={onSelect}
+            />
+          </div>
+        );
+      })}
     </div>
-  );
+  </div>
+);
 }
