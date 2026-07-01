@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Token } from "../types";
 import { formatUsd, formatPct } from "../format";
 
@@ -7,7 +8,11 @@ interface TokenRowProps {
   onSelect: (id: string) => void;
 }
 
-export function TokenRow({ token, selected, onSelect }: TokenRowProps) {
+export const TokenRow = memo(function TokenRow({
+  token,
+  selected,
+  onSelect,
+}: TokenRowProps) {
   const changeClass = token.priceChangePct >= 0 ? "up" : "down";
 
   return (
@@ -26,4 +31,4 @@ export function TokenRow({ token, selected, onSelect }: TokenRowProps) {
       <div className={`num ${changeClass}`}>{formatPct(token.priceChangePct)}</div>
     </div>
   );
-}
+});

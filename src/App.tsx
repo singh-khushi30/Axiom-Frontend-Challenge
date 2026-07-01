@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTokenStream } from "./data/useTokenStream";
 import { TokenList } from "./components/TokenList";
 import { Sidebar } from "./components/Sidebar";
@@ -19,19 +19,27 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("marketCapUsd");
 
-  // Filter + sort run on every render, including every stream tick.
-  const normalizedQuery = query.trim().toLowerCase();
-  const filtered = tokens.filter((token) => {
-    if (!normalizedQuery) return true;
-    return (
-      token.name.toLowerCase().includes(normalizedQuery) ||
-      token.ticker.toLowerCase().includes(normalizedQuery)
-    );
-  });
-  const sorted = filtered.slice().sort((a, b) => b[sortKey] - a[sortKey]);
+  const sorted = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
 
-  const selectedToken =
-    tokens.find((token) => token.id === selectedId) ?? null;
+    const filtered = tokens.filter((token) => {
+      if (!normalizedQuery) return true;
+
+      return (
+        token.name.toLowerCase().includes(normalizedQuery) ||
+        token.ticker.toLowerCase().includes(normalizedQuery)
+      );
+    });
+
+    return filtered
+      .slice()
+      .sort((a, b) => b[sortKey] - a[sortKey]);
+  }, [tokens, query, sortKey]);
+
+  const selectedToken = useMemo(
+    () => tokens.find((token) => token.id === selectedId) ?? null,
+    [tokens, selectedId],
+  );
 
   return (
     <div className="app">
